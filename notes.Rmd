@@ -1,0 +1,77 @@
+---
+title: "notes"
+author: "Grace Rotondo"
+date: "11/7/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(dplyr)
+library(babynames)
+library(skimr)
+library(ggplot2)
+library(tidyverse)
+```
+
+How many years and how many names/distinct names
+```{r}
+babynames %>% 
+  select(year) %>% 
+  distinct() %>% 
+  nrow()
+```
+
+```{r}
+babynames %>% 
+  select(name) %>% 
+  distinct() %>% 
+  nrow()
+```
+
+Which name appears in the most years
+```{r}
+babynames %>% 
+  select(name) %>% 
+  group_by(name) %>% 
+  count(name) %>% 
+  arrange(desc(n))
+
+
+babynames %>% 
+  group_by(name) %>% 
+  summarize(total = n()) %>% 
+  arrange(desc(total))
+```
+
+
+Pick a name and plot
+```{r}
+babynames %>% 
+  filter(name == "Alonzo") %>% 
+  filter(sex == "F") %>% 
+  ggplot(aes(year, prop)) +
+  geom_point()
+```
+
+all male names in every year
+```{r}
+all_male_names <- babynames %>% 
+  filter(sex == "M") %>% 
+  group_by(name) %>% 
+  count(name) %>% 
+  arrange(desc(n)) %>% 
+  filter(n == 138)
+```
+
+model for all male names which appear in all years
+```{r}
+babynames %>% 
+  filter(name %in% all_male_names) %>% 
+  group_by() %>% 
+  nest() %>% 
+  mutate(models = map(data, ~lm(prop ~ year, data = .x))) %>% 
+  mutate(coefficients = map(models, ~ coef(.x))) %>% 
+  mutate(slope = map_dbl)
+```
+
